@@ -47,13 +47,16 @@ ID3D11RenderTargetView* g_pBackBufferRTView = NULL;
 
 // Constant values:
 
-//const int G_CLEAR_COLOUR_ARRAY_SIZE = 4;
+const int G_CLEAR_COLOUR_ARRAY_SIZE = 4;
 
 /** For clearing the back buffer (leave the alpha value at 1.0f) */
 //float  g_clear_colour[G_CLEAR_COLOUR_ARRAY_SIZE] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 /** For the Advanced Exercise of Tutorial 02 */
 DXGI_SWAP_CHAIN_DESC DefaultSwapChainDescription;
+
+/** For Exercise 01 of Tutorial 3 */
+const float G_DEFAULT_CLEAR_COLOUR[G_CLEAR_COLOUR_ARRAY_SIZE] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 // Rename for each tutorial
 //char		g_TutorialName[100] = "James Moran Tutorial 02 Exercise 01\0";
@@ -438,7 +441,19 @@ HRESULT InitialiseGraphics()//03-01
 
 	// 'Load and compile pixel and vertex shaders - use vs_5_0 to target DX11 hardware only'
 	ID3DBlob *VS, *PS, *error;
-	hr = D3DX11CompileFromFile("shaders.hlsl", 0, 0, "VShader", "vs_5_0", 0, 0, 0, &VS, &error, 0);
+	hr = D3DX11CompileFromFile("shaders.hlsl", 0, 0, "VShader", "vs_4_0", 0, 0, 0, &VS, &error, 0);
+	
+	if (error != 0) // 'check for shader compilation error'
+	{
+		OutputDebugStringA((char*)error->GetBufferPointer());
+		error->Release();
+		if (FAILED(hr)) // 'don't fail is error is just a warning'
+		{
+			return hr;
+		};
+	}
+
+	hr = D3DX11CompileFromFile("shaders.hlsl", 0, 0, "PShader", "ps_4_0", 0, 0, 0, &PS, &error, 0);
 	
 	if (error != 0) // 'check for shader compilation error'
 	{
@@ -458,7 +473,7 @@ HRESULT InitialiseGraphics()//03-01
 		return hr;
 	}
 
-	hr = g_pD3DDevice->CreatePixelShader(VS->GetBufferPointer(), VS->GetBufferSize(), NULL, &g_pPixelShader);
+	hr = g_pD3DDevice->CreatePixelShader(PS->GetBufferPointer(), PS->GetBufferSize(), NULL, &g_pPixelShader);
 	
 	if (FAILED(hr))
 	{
@@ -502,7 +517,7 @@ void RenderFrame(void)
 		//g_clear_colour[ColourComponentIterator] = RandomDistribution(DefaultRandomGenerator);
 	//}
 
-	g_pImmediateContext->ClearRenderTargetView(g_pBackBufferRTView, NULL);
+	g_pImmediateContext->ClearRenderTargetView(g_pBackBufferRTView, G_DEFAULT_CLEAR_COLOUR);
 
 	// 'Set vertex buffer //03-01'
 	UINT stride = sizeof(POS_COL_VERTEX);
